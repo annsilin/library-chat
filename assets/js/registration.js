@@ -17,6 +17,7 @@ registrationForm.addEventListener("submit", (e) => {
   const email = emailInput.value.trim().toLowerCase();
   const password = passwordInput.value.trim();
   if (validateRegistration(firstName, lastName, email, password, users)) {
+    const currentDate = new Date();
     const newUser = {
       email: email,
       password: password,
@@ -26,7 +27,15 @@ registrationForm.addEventListener("submit", (e) => {
       visits: 1,
       books: [],
       cardNumber: assignCardNumber(users),
-      cardPurchased: false
+      cardPurchased: false,
+      registrationTimestamp: currentDate.getTime(),
+      registrationDate: currentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      favoriteGenres: [],
+      aboutMe: ''
     }
     logoutAllUsers(users);
     addUserToLocalStorage(newUser);

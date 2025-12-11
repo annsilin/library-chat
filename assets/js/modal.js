@@ -7,7 +7,11 @@ const signUpBtns = document.querySelectorAll(".sign-up");
 const signInBtns = document.querySelectorAll(".log-in");
 const profileBtns = document.querySelectorAll(".my-profile");
 const closeBtns = document.querySelectorAll(".btn-close");
-const modals = [modalProfile, modalSignUp, modalSignIn, modalBuyCard];
+
+const modals = [modalProfile, modalSignUp, modalSignIn].filter(modal => modal !== null);
+if (modalBuyCard) {
+  modals.push(modalBuyCard);
+}
 
 signUpBtns.forEach(button => {
   button.addEventListener("click", (e) => {

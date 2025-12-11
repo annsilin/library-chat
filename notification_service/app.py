@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 init_db()
 
+
 def is_user_online(user_id):
     try:
         response = requests.get(f"http://presence-service:5004/presence/{user_id}", timeout=5)
@@ -26,6 +27,7 @@ def is_user_online(user_id):
         logger.error(f"Failed to check presence for {user_id}: {e}")
         return False  # Offline if failed
 
+
 def callback(ch, method, properties, body):
     try:
         event = json.loads(body.decode())
@@ -35,6 +37,30 @@ def callback(ch, method, properties, body):
             room_id = event['room_id']
             content = event['content']
 
+            # Get room name from chat service
+            room_name = room_id  # Default to ID if name fetch fails
+            try:
+                room_url = f"http://chat-service:5003/rooms/{room_id}"
+                logger.info(f"Fetching room info from: {room_url}")
+
+                room_response = requests.get(room_url, timeout=5)
+                logger.info(f"Room response status: {room_response.status_code}")
+
+                if room_response.status_code == 200:
+                    room_data = room_response.json()
+                    room_name = room_data.get('name', room_id)
+                    logger.info(f"Successfully got room name: {room_name}")
+                else:
+                    logger.warning(
+                        f"Failed to get room info: {room_response.status_code}, response: {room_response.text}")
+                    room_name = room_id  # Fallback to ID
+
+            except requests.RequestException as e:
+                logger.error(f"Failed to fetch room name for {room_id}: {e}")
+                room_name = room_id  # Fallback to ID
+
+            logger.info(f"Final room name to use in notification: {room_name}")
+
             # Get room members
             members_url = f"http://chat-service:5003/rooms/{room_id}/members"
             recipients = []
@@ -42,6 +68,7 @@ def callback(ch, method, properties, body):
                 response = requests.get(members_url, timeout=5)
                 response.raise_for_status()
                 recipients = response.json()
+                logger.info(f"Found recipients: {recipients}")
             except requests.RequestException as e:
                 logger.error(f"Failed to fetch room members for {room_id}: {e}")
                 # Continue with empty recipients if the endpoint fails
@@ -49,13 +76,16 @@ def callback(ch, method, properties, body):
             recipients = [user for user in recipients if user != sender_user_id]
             for recipient in recipients:
                 if is_user_online(recipient):
-                    message = f"New message from User_{sender_user_id[:4]} in room {room_id}: {content}"
+                    # Use room_name instead of room_id
+                    message = f"New message from User_{sender_user_id[:4]} in room '{room_name}': {content}"
+                    logger.info(f"Saving notification for {recipient}: {message}")
                     save_notification(recipient, message)
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logger.error(f"Error processing event: {e}")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+
 
 def start_consumer():
     while True:
@@ -71,13 +101,14 @@ def start_consumer():
                 channel.start_consuming()
                 break
             except pika.exceptions.AMQPConnectionError as e:
-                logger.error(f"Failed to connect to RabbitMQ (attempt {attempt+1}/{max_retries}): {e}")
+                logger.error(f"Failed to connect to RabbitMQ (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                 else:
                     logger.error("Max retries reached. Will retry consumer in 10 seconds...")
                     time.sleep(10)
+
 
 @app.route('/notifications/<user_id>', methods=['GET'])
 def get_user_notifications(user_id):
@@ -88,6 +119,7 @@ def get_user_notifications(user_id):
         logger.error(f"Error retrieving notifications for {user_id}: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+
 @app.route('/notifications/<notification_id>/delivered', methods=['POST'])
 def mark_delivered(notification_id):
     try:
@@ -97,8 +129,10 @@ def mark_delivered(notification_id):
         logger.error(f"Error marking notification {notification_id} as delivered: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+
 if __name__ == '__main__':
     import threading
+
     consumer_thread = threading.Thread(target=start_consumer, daemon=True)
     consumer_thread.start()
     app.run(host='0.0.0.0', port=5006, debug=False)

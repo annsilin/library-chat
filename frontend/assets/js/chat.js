@@ -1,5 +1,6 @@
 let userId = null;
 let roomId = null;
+let roomName = null;
 let lastNotificationId = 0; // Track the last processed notification
 let isOnline = false; // Track current presence status
 
@@ -157,7 +158,7 @@ const toggleStatus = async () => {
 const joinRoom = async () => {
     const name = document.getElementById('roomName').value;
     console.log('Attempting to join room with name:', name);
-    
+
     if (!name) {
         console.error('Room name is empty');
         return;
@@ -169,22 +170,24 @@ const joinRoom = async () => {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name})
         });
-        
+
         if (!response.ok) {
             throw new Error(`Failed to join room: ${response.status} ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         console.log('Server response:', result);
+
         roomId = result.room_id;
+        roomName = result.name;
+
         console.log('Set roomId to:', roomId);
-        
+        console.log('Set roomName to:', roomName);
+
         document.getElementById('chatSection').classList.remove('hidden');
-        
-        // Display welcome message with user info
-        const userDisplayName = getUserDisplayName();
-        const userStatus = isUserAuthenticated() ? 'Authenticated' : 'Anonymous';
-        document.getElementById('chat').innerText = `Joined room: ${result.name}\nUser: ${userDisplayName} (${userStatus})\n`;
+
+        // Обновляем заголовок комнаты в UI
+        updateRoomTitle();
         
         // Set user to online if authenticated
         if (isUserAuthenticated()) {
@@ -200,6 +203,14 @@ const joinRoom = async () => {
         pollMessages();
     } catch (error) {
         console.error('Error joining room:', error);
+    }
+};
+
+/* Update room title in the UI */
+const updateRoomTitle = () => {
+    const roomTitle = document.getElementById('roomTitle');
+    if (roomTitle && roomName) {
+        roomTitle.textContent = `Room: ${roomName}`;
     }
 };
 
@@ -237,24 +248,24 @@ const sendMessage = async () => {
 const displayMessage = (msg) => {
     const chat = document.getElementById('chat');
     if (!chat) return;
-    
+
     // Try to parse user data from the message
     let userDisplayName = `User_${msg.user_id.slice(0, 4)}`;
     let userProfileUrl = null;
     let isClickable = false;
-    
+
     // Check if this is the current user's message
     const isCurrentUser = msg.user_id === userId;
-    
+
     // Check if user ID looks like a card number (9 hex digits)
     const isCardNumber = /^[0-9A-F]{9}$/i.test(msg.user_id);
-    
+
     if (isCardNumber) {
         // This user might be authenticated
         userDisplayName = `User_${msg.user_id.slice(0, 4)}`;
         userProfileUrl = getUserProfileUrl(msg.user_id);
         isClickable = true;
-        
+
         // If this is the current user and we're authenticated, show real name
         if (isCurrentUser && isUserAuthenticated()) {
             userDisplayName = getUserDisplayName();
@@ -263,49 +274,60 @@ const displayMessage = (msg) => {
         // Current user (authenticated or anonymous)
         userDisplayName = getUserDisplayName();
     }
-    
-    // Create message element
+
+    // Format timestamp with user's timezone
+    let timestampDisplay = '';
+    if (msg.created_at) {
+        const timestamp = new Date(msg.created_at);
+        // Use user's local timezone
+        timestampDisplay = timestamp.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    }
+
+    // Create message element with original simple structure
     const messageElement = document.createElement('div');
     messageElement.className = 'chat-message';
-    
-    // Create username element
+    messageElement.setAttribute('data-message-id', msg.id);
+
+    // Create username element (simple span, not clickable link)
     const usernameElement = document.createElement('span');
     usernameElement.className = 'chat-username';
-    
+
     if (isClickable && userProfileUrl) {
-        // Make username clickable with profile link
+        // Make username clickable with profile link (simple link, not complex structure)
         const usernameLink = document.createElement('a');
         usernameLink.href = userProfileUrl;
         usernameLink.target = '_blank';
         usernameLink.className = 'chat-username-link';
-        usernameLink.innerText = userDisplayName;
+        usernameLink.textContent = userDisplayName;
         usernameElement.appendChild(usernameLink);
     } else {
-        // Non-clickable username
-        usernameElement.innerText = userDisplayName;
+        // Non-clickable username (simple text)
+        usernameElement.textContent = userDisplayName;
     }
-    
-    // Create content element
+
+    // Create content element with message text
     const contentElement = document.createElement('span');
     contentElement.className = 'chat-content';
-    contentElement.innerText = `: ${msg.content}`;
-    
+    contentElement.textContent = `: ${msg.content}`;
+
     // Add timestamp if available
-    if (msg.created_at) {
-        const timestamp = new Date(msg.created_at).toLocaleTimeString();
+    if (timestampDisplay) {
         const timestampElement = document.createElement('span');
         timestampElement.className = 'chat-timestamp';
-        timestampElement.innerText = ` [${timestamp}]`;
+        timestampElement.textContent = ` [${timestampDisplay}]`;
         contentElement.appendChild(timestampElement);
     }
-    
-    // Assemble message
+
+    // Assemble message (simple structure like before)
     messageElement.appendChild(usernameElement);
     messageElement.appendChild(contentElement);
-    
+
     // Add to chat
     chat.appendChild(messageElement);
-    chat.scrollTop = chat.scrollHeight;
 };
 
 /* Poll for new messages and notifications */
@@ -324,34 +346,38 @@ const pollMessages = async () => {
         if (!messagesResponse.ok) {
             throw new Error(`Failed to fetch messages: ${messagesResponse.status} ${messagesResponse.statusText}`);
         }
-        
+
         if (!notificationsResponse.ok) {
             throw new Error(`Failed to fetch notifications: ${notificationsResponse.status} ${notificationsResponse.statusText}`);
         }
 
         const messages = await messagesResponse.json();
         const notifications = await notificationsResponse.json();
-        console.log('Fetched messages:', messages);
-        console.log('Fetched notifications:', notifications);
 
-        // Clear chat but keep header
+        // Get chat container
         const chat = document.getElementById('chat');
-        const header = chat.querySelector('.chat-header') || (() => {
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'chat-header';
-            headerDiv.innerText = chat.innerText.split('\n')[0];
-            chat.innerHTML = '';
-            chat.appendChild(headerDiv);
-            return headerDiv;
-        })();
-        
-        // Remove old messages but keep header
-        const oldMessages = chat.querySelectorAll('.chat-message');
-        oldMessages.forEach(msg => msg.remove());
 
-        // Display messages
+        // Track scroll state BEFORE making any changes
+        const wasScrolledToBottom = chat.scrollHeight - chat.clientHeight <= chat.scrollTop + 50;
+        const previousScrollTop = chat.scrollTop;
+        const previousScrollHeight = chat.scrollHeight;
+
+        // Get existing message IDs
+        const existingMessageIds = new Set();
+        const existingMessageElements = chat.querySelectorAll('.chat-message');
+        existingMessageElements.forEach(msg => {
+            const msgId = msg.getAttribute('data-message-id');
+            if (msgId) existingMessageIds.add(msgId);
+        });
+
+        // Display new messages (only those we haven't displayed yet)
+        let newMessagesAdded = false;
         messages.forEach(msg => {
-            displayMessage(msg);
+            if (!existingMessageIds.has(msg.id.toString())) {
+                existingMessageIds.add(msg.id.toString());
+                displayMessage(msg);
+                newMessagesAdded = true;
+            }
         });
 
         // Handle notifications
@@ -365,33 +391,65 @@ const pollMessages = async () => {
             }
 
             // Play sound and show browser notification
-            const audio = new Audio('/assets/notification.mp3');
+            const audio = new Audio('/assets/sounds/notification.mp3');
             audio.play().catch(err => console.error('Error playing sound:', err));
 
             newNotifications.forEach(notif => {
+                // Use notification message AS IS (server already includes room name)
+                const notificationMessage = notif.message;
+
                 // Show browser notification if permission is granted
                 if (Notification.permission === 'granted') {
-                    new Notification('New Message', {
-                        body: notif.message,
-                        icon: '/assets/icon.png'
+                    new Notification('Library Chat', {
+                        body: notificationMessage,
                     });
                 }
 
                 // Display notification in chat
                 const notificationElement = document.createElement('div');
                 notificationElement.className = 'chat-notification';
-                notificationElement.innerText = `[Notification] ${notif.message} (Received at ${notif.created_at})`;
+                notificationElement.setAttribute('data-notification-id', notif.id);
+
+                // Format notification timestamp with user's timezone
+                let notifTimestamp = '';
+                if (notif.created_at) {
+                    const timestamp = new Date(notif.created_at);
+                    notifTimestamp = timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                }
+
+                notificationElement.textContent = `[Notification] ${notificationMessage} (${notifTimestamp})`;
                 chat.appendChild(notificationElement);
                 markNotificationDelivered(notif.id);
             });
+
+            newMessagesAdded = true;
         }
 
-        chat.scrollTop = chat.scrollHeight;
+        // Smart scroll position restoration
+        if (newMessagesAdded) {
+            requestAnimationFrame(() => {
+                if (wasScrolledToBottom) {
+                    // User was at bottom - keep them at bottom
+                    chat.scrollTop = chat.scrollHeight;
+                } else {
+                    // User was scrolling up - maintain relative position
+                    const newScrollHeight = chat.scrollHeight;
+                    const heightDifference = newScrollHeight - previousScrollHeight;
+                    chat.scrollTop = previousScrollTop + heightDifference;
+                }
+            });
+        }
+
     } catch (error) {
         console.error('Error polling messages or notifications:', error);
     }
-    
-    setTimeout(pollMessages, 1000); // Poll every 1 second
+
+    // Poll every 1.5 seconds
+    setTimeout(pollMessages, 1500);
 };
 
 /* Mark notification as delivered */

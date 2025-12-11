@@ -2,27 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Anonymous Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Chat - Brooklyn Public Library</title>
+    <link rel="stylesheet" href="assets/css/normalize.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/chat.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Forum&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
 </head>
 <body>
-<h1>Anonymous Chat</h1>
-<div class="joinRoom">
-    <input type="text" id="roomName" placeholder="Room name" required>
-    <button onclick="joinRoom()">Join Room</button>
-    <button id="statusToggle" onclick="toggleStatus()">Set Online</button>
-</div>
+    <header class="main-header">
+        <h1 class="main-header__title">Brooklyn Public Library</h1>
+        <nav class="navigation" id="navigation">
+            <ul class="navigation__links" id="navigation__links">
+                <li><a class="navigation__item" href="index.html">Home</a></li>
+                <li><a class="navigation__item" href="index.html#about">About</a></li>
+                <li><a class="navigation__item" href="index.html#favorites">Favorites</a></li>
+                <li><a class="navigation__item" href="index.html#coffee">Coffee shop</a></li>
+                <li><a class="navigation__item" href="index.html#contacts">Contacts</a></li>
+                <li><a class="navigation__item" href="index.html#library-card">Library Card</a></li>
+            </ul>
+        </nav>
 
-<div id="chatSection" class="hidden">
-    <div id="chat"></div>
-    <div class="sendMessage">
-        <input type="text" id="message" placeholder="Type a message">
-        <button onclick="sendMessage()">Send</button>
-    </div>
-</div>
+        <div class="navigation-icons" id="navigation-icons">
+            <button class="btn-profile">
+                <svg class="profile-icon icon-link" width="28px" height="28px">
+                    <use href="assets/svg/icons.svg#icon-profile"></use>
+                </svg>
+            </button>
 
-<script defer src="assets/js/current_user.js"></script>
-<script defer src="assets/js/chat.js"></script>
-<script defer src="assets/js/registration.js"></script>
+            <div class="drop-menu-profile drop-menu-profile-no-auth" id="drop-menu-profile-no-auth">
+                <span class="drop-menu-profile-card-number">Profile</span>
+                <span class="drop-menu-profile-line"></span>
+                <button class="drop-menu-profile-btn drop-menu-profile-login-btn log-in">Log In</button>
+                <button class="drop-menu-profile-btn drop-menu-profile-register-btn sign-up">Register</button>
+            </div>
+
+            <div class="drop-menu-profile drop-menu-profile-auth" id="drop-menu-profile-auth">
+                <span class="drop-menu-profile-card-number" id="drop-menu-profile-card-number">Profile</span>
+                <span class="drop-menu-profile-line"></span>
+                <button class="drop-menu-profile-btn drop-menu-profile-myprofile-btn my-profile">My profile</button>
+                <button class="drop-menu-profile-btn drop-menu-profile-logout-btn log-out">Log Out</button>
+            </div>
+
+            <div class="burger-button" id="burger-button">
+                <div class="burger-button__bar"></div>
+                <div class="burger-button__bar"></div>
+                <div class="burger-button__bar"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="chat-main">
+        <section class="section section-chat">
+            <h2 class="section__title">Community Chat</h2>
+            <hr class="section__title-underline">
+
+            <div class="chat__description">
+                <p class="section__description">Join our library community chat to discuss books, share recommendations,
+                    and connect with fellow readers. You can chat anonymously or use your library account for a
+                    personalized experience.</p>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat__join-section">
+<!--                    <div class="chat__status-indicator">-->
+<!--                        <span class="chat__status-label">Status:</span>-->
+<!--                        <span class="chat__status-value" id="statusValue">Offline</span>-->
+<!--                    </div>-->
+
+                    <div class="chat__join-form">
+                        <input type="text" id="roomName" class="chat__input" placeholder="Enter room name" required>
+                        <button class="button button-secondary chat__join-btn" onclick="joinRoom()">Join</button>
+                        <button id="statusToggle" class="button button-secondary" onclick="toggleStatus()">Go Online</button>
+                    </div>
+
+                    <div class="chat__instructions">
+                        <div class="chat__instruction-item">
+                            <span>Authenticated users see real names and can access profiles</span>
+                        </div>
+                        <div class="chat__instruction-item">
+                            <span>Anonymous users appear as "User_XXXX"</span>
+                        </div>
+                        <div class="chat__instruction-item">
+                            <span>Enable notifications for new messages</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="chatSection" class="chat__chat-section hidden">
+                    <div class="chat__header">
+                        <h3 class="chat__room-title" id="roomTitle"></h3>
+                    </div>
+
+                    <div id="chat" class="chat__messages"></div>
+
+                    <div class="chat__send-form">
+                        <input type="text" id="message" class="chat__input chat__message-input"
+                               placeholder="Type your message here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button class="button button-primary chat__send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+
+                    <div class="chat__info">
+                        <svg class="chat__info-icon" width="16px" height="16px">
+                            <use href="assets/svg/icons.svg#icon-info"></use>
+                        </svg>
+                        <span>Click on any user's name to view their profile (authenticated users only)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-wrapper">
+        <div class="footer-contacts-wrapper">
+            <div class="footer-contacts">
+                <p class="address"><a class="footer-link" href="https://goo.gl/maps/89vQ8Y5qs4DkFxkM7" target="_blank">286
+                    Cadman Plaza, New York,<br> NY 11238, United States</a></p>
+                <ul class="social">
+                    <li>
+                        <a class="footer-link" href="https://www.twitter.com/bklynlibrary" target="_blank">
+                            <svg class="social-icon icon-link" width="24px" height="24px">
+                                <use href="assets/svg/icons.svg#icon-twitter"></use>
+                            </svg>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="footer-link" href="https://www.instagram.com/bklynlibrary" target="_blank">
+                            <svg class="social-icon icon-link" width="24px" height="24px">
+                                <use href="assets/svg/icons.svg#icon-instagram"></use>
+                            </svg>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="footer-link" href="https://www.facebook.com/BrooklynPublicLibrary/" target="_blank">
+                            <svg class="social-icon icon-link" width="24px" height="24px">
+                                <use href="assets/svg/icons.svg#icon-facebook"></use>
+                            </svg>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-schedule">
+                <p class="schedule">Mon - Fri<br>
+                    08&#58;00 am - 07&#58;00 pm</p>
+                <p class="schedule">Sat - Sun<br>
+                    10&#58;00 am - 06&#58;00 pm</p>
+            </div>
+        </div>
+        <hr class="footer-line">
+        <div class="footer-credits-wrapper">
+            <span class="credits-content credits-content-year">2023</span>
+            <span class="credits-content"><a class="footer-link" href="https://rs.school/js-stage0/" target="_blank">The Rolling Scopes School</a></span>
+            <span class="credits-content credits-content-nickname"><a class="footer-link" href="https://github.com/annsilin"
+                                                                      target="_blank">annsilin</a></span>
+        </div>
+    </footer>
+
+    <div class="overlay hidden"></div>
+
+    <!-- Modal windows will be dynamically created by JS -->
+
+<!--    <script defer src="assets/js/current_user.js"></script>-->
+<!--    <script defer src="assets/js/profile-dropdown.js"></script>-->
+<!--    <script defer src="assets/js/burger.js"></script>-->
+<!--    <script defer src="assets/js/chat.js"></script>-->
+<!--&lt;!&ndash;    <script defer src="assets/js/update_UI_on_login.js"></script>&ndash;&gt;-->
+<!--    <script defer src="assets/js/modal.js"></script>-->
+<!--    <script defer src="assets/js/profile-modal.js"></script>-->
+<!--    <script defer src="assets/js/registration.js"></script>-->
+
+
+    <script defer src="assets/js/current_user.js"></script>
+    <script defer src="assets/js/update_UI_on_login.js"></script>
+    <script defer src="assets/js/profile-dropdown.js"></script>
+    <script defer src="assets/js/burger.js"></script>
+    <script defer src="assets/js/registration.js"></script>
+    <script defer src="assets/js/modal.js"></script>
+    <script defer src="assets/js/profile-modal.js"></script>
+    <script defer src="assets/js/chat.js"></script>
+
+
 </body>
 </html>

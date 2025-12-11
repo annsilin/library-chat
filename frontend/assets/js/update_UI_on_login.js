@@ -6,6 +6,8 @@ const updateUI = () => {
   let fullName = currentUser.firstName + " " + currentUser.lastName;
   btnProfile.setAttribute('title', fullName);
 
+
+  if (document.querySelector(".get-card-buttons-wrapper")) {
   // Replace sign up and log in buttons with profile button in 'Get Card' section
   document.querySelector(".get-card-buttons-wrapper").style.display = 'none';
   document.getElementById("profile-btn").style.display = 'block';
@@ -13,7 +15,7 @@ const updateUI = () => {
   // Display Reader's card with user's info
   cardWrapper.classList.toggle('switch');
   changeReadersCard(currentUser);
-  document.querySelector(".card-subtitle").innerText = "Your Library card";
+  document.querySelector(".card-subtitle").innerText = "Your Library card";}
 };
 
 addEventListener("DOMContentLoaded", () => {

@@ -63,3 +63,14 @@ def get_room_members(room_id):
     rows = cursor.fetchall()
     conn.close()
     return [row[0] for row in rows] if rows else []
+
+def get_room_by_id(room_id):
+    conn = sqlite3.connect('chat.db')
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, name, created_at FROM rooms WHERE id = ?",
+        (room_id,)
+    )
+    room = cursor.fetchone()
+    conn.close()
+    return room

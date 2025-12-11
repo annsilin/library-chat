@@ -1,7 +1,7 @@
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from .database import init_db, insert_message, get_messages, insert_room, get_room_members, insert_room_member, get_room_by_name
+from .database import init_db, insert_message, get_messages, insert_room, get_room_members, insert_room_member, get_room_by_name, get_room_by_id
 import uuid
 import json
 import pika
@@ -111,6 +111,27 @@ def get_room_members_route(room_id):
         return jsonify(members), 200
     except Exception as e:
         logger.error(f"Error fetching members for room {room_id}: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/rooms/<room_id>', methods=['GET'])
+def get_room(room_id):
+    try:
+        room = get_room_by_id(room_id)
+        if not room:
+            return jsonify({'error': 'Room not found'}), 404
+
+        room_id, name, created_at = room
+
+        logger.info(f"Returning room: id={room_id}, name={name}")
+
+        return jsonify({
+            'room_id': room_id,
+            'name': name,
+            'created_at': created_at
+        }), 200
+    except Exception as e:
+        logger.error(f"Error fetching room {room_id}: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':

@@ -63,13 +63,19 @@ loginForm.addEventListener("submit", (e) => {
 });
 
 logoutBtns.forEach(logoutBtn =>
-  logoutBtn.addEventListener("click", (e) => {
-    if (currentUser) {
-      currentUser.isLoggedIn = false;
-      localStorage.setItem('users-annsilin', JSON.stringify(users));
-      location.reload();
-    }
-  })
+    logoutBtn.addEventListener("click", (e) => {
+        if (currentUser) {
+            currentUser.isLoggedIn = false;
+            localStorage.setItem('users-annsilin', JSON.stringify(users));
+
+            // Update chat authentication status
+            if (typeof updateChatAuthStatus === 'function') {
+                updateChatAuthStatus();
+            }
+
+            location.reload();
+        }
+    })
 );
 
 btnEyeSignUp.addEventListener("click", () => {

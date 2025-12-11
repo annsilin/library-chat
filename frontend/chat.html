@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Anonymous Chat</title>
+    <link rel="stylesheet" href="assets/css/chat.css">
+</head>
+<body>
+<h1>Anonymous Chat</h1>
+<div class="joinRoom">
+    <input type="text" id="roomName" placeholder="Room name" required>
+    <button onclick="joinRoom()">Join Room</button>
+    <button id="statusToggle" onclick="toggleStatus()">Set Online</button>
+</div>
+
+<div id="chatSection" class="hidden">
+    <div id="chat"></div>
+    <div class="sendMessage">
+        <input type="text" id="message" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script defer src="assets/js/current_user.js"></script>
+<script defer src="assets/js/chat.js"></script>
+<script defer src="assets/js/registration.js"></script>
+</body>
+</html>

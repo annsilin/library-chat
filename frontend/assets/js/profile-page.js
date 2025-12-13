@@ -1,28 +1,28 @@
 /* Initialize profile page and render user profile data */
 const initProfilePage = () => {
-  // Get user from URL parameter or use current logged in user
-  const urlParams = new URLSearchParams(window.location.search);
-  const cardNumberFromURL = urlParams.get('card');
-  let profileUser = null;
+    // Get user from URL parameter or use current logged in user
+    const urlParams = new URLSearchParams(window.location.search);
+    const cardNumberFromURL = urlParams.get('card');
+    let profileUser = null;
 
-  if (cardNumberFromURL) {
-    // Find user by card number from URL parameter
-    profileUser = users.find(user => user.cardNumber && 
-      user.cardNumber.toUpperCase() === cardNumberFromURL.toUpperCase());
-  } else if (currentUser) {
-    // Show current user's profile
-    profileUser = currentUser;
-  }
-
-  const isOwnProfile = currentUser && profileUser && 
-    currentUser.cardNumber === profileUser.cardNumber;
-
-  const profileContent = document.getElementById('profile-content');
-
-  // Handle cases when user is not found or not logged in
-  if (!profileUser) {
     if (cardNumberFromURL) {
-      profileContent.innerHTML = `
+        // Find user by card number from URL parameter
+        profileUser = users.find(user => user.cardNumber &&
+            user.cardNumber.toUpperCase() === cardNumberFromURL.toUpperCase());
+    } else if (currentUser) {
+        // Show current user's profile
+        profileUser = currentUser;
+    }
+
+    const isOwnProfile = currentUser && profileUser &&
+        currentUser.cardNumber === profileUser.cardNumber;
+
+    const profileContent = document.getElementById('profile-content');
+
+    // Handle cases when user is not found or not logged in
+    if (!profileUser) {
+        if (cardNumberFromURL) {
+            profileContent.innerHTML = `
         <div class="profile-unauthorized">
           <h2 class="profile-header__title">User Not Found</h2>
           <p class="profile-unauthorized__message">User with card number "${cardNumberFromURL}" not found.</p>
@@ -33,8 +33,8 @@ const initProfilePage = () => {
           `}
         </div>
       `;
-    } else if (!currentUser) {
-      profileContent.innerHTML = `
+        } else if (!currentUser) {
+            profileContent.innerHTML = `
         <div class="profile-unauthorized">
           <h2 class="profile-header__title">Profile Access</h2>
           <p class="profile-unauthorized__message">Please log in to view your profile.</p>
@@ -44,52 +44,52 @@ const initProfilePage = () => {
           </div>
         </div>
       `;
-      addAuthButtonHandlers();
-    }
-    return;
-  }
-
-  // Format registration date for display
-  const formatRegistrationDate = (user) => {
-    if (user.registrationDate) {
-      return user.registrationDate;
-    } else if (user.registrationTimestamp) {
-      const date = new Date(user.registrationTimestamp);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    }
-    return 'Not specified';
-  };
-
-  // Get user's books with complete information
-  const getUserBooksWithInfo = () => {
-    if (!profileUser.books || !Array.isArray(profileUser.books)) {
-      return [];
+            addAuthButtonHandlers();
+        }
+        return;
     }
 
-    return profileUser.books.map(bookId => {
-      const book = books.find(b => b.id === bookId);
-      return book || {
-        id: bookId,
-        title: 'Unknown Book',
-        author: 'Unknown Author',
-        cover: 'assets/img/book-covers/default.png'
-      };
-    });
-  };
+    // Format registration date for display
+    const formatRegistrationDate = (user) => {
+        if (user.registrationDate) {
+            return user.registrationDate;
+        } else if (user.registrationTimestamp) {
+            const date = new Date(user.registrationTimestamp);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        return 'Not specified';
+    };
 
-  // Generate HTML for user's borrowed books
-  const generateBooksHTML = (userBooks) => {
-    if (userBooks.length === 0) {
-      return `
+    // Get user's books with complete information
+    const getUserBooksWithInfo = () => {
+        if (!profileUser.books || !Array.isArray(profileUser.books)) {
+            return [];
+        }
+
+        return profileUser.books.map(bookId => {
+            const book = books.find(b => b.id === bookId);
+            return book || {
+                id: bookId,
+                title: 'Unknown Book',
+                author: 'Unknown Author',
+                cover: 'assets/img/book-covers/default.png'
+            };
+        });
+    };
+
+    // Generate HTML for user's borrowed books
+    const generateBooksHTML = (userBooks) => {
+        if (userBooks.length === 0) {
+            return `
         <div class="profile-empty-state">
           <h3 class="profile-empty-state__title">No Books Currently Borrowed</h3>
           <p class="profile-empty-state__description">
             ${isOwnProfile ? 'Visit our library or browse our online catalog to borrow your next favorite book.' :
-              'This user has no borrowed books at the moment.'}
+                'This user has no borrowed books at the moment.'}
           </p>
           ${isOwnProfile ? `
             <button class="profile-action-btn profile-action-btn--primary" onclick="window.location.href='index.html#favorites'">
@@ -97,9 +97,9 @@ const initProfilePage = () => {
             </button>
           ` : ''}
         </div>`;
-    }
+        }
 
-    return userBooks.map(book => `
+        return userBooks.map(book => `
       <div class="profile-book-card" data-book-id="${book.id}">
         <img src="${book.cover}" alt="${book.title}" class="profile-book-card__cover">
         <div class="profile-book-card__info">
@@ -113,12 +113,12 @@ const initProfilePage = () => {
         ` : ''}
       </div>
     `).join('');
-  };
+    };
 
-  const userBooks = getUserBooksWithInfo();
+    const userBooks = getUserBooksWithInfo();
 
-  // Render profile HTML
-  profileContent.innerHTML = `
+    // Render profile HTML
+    profileContent.innerHTML = `
     <div class="profile-header">
       <h1 class="profile-header__title">${isOwnProfile ? 'My Profile' : `${profileUser.firstName}'s Profile`}</h1>
       <a href="index.html" class="profile-header__back-link">
@@ -299,180 +299,248 @@ const initProfilePage = () => {
     </section>
   `;
 
-  // Add edit handlers for profile fields (only for own profile)
-  if (isOwnProfile) {
-    addProfileEditHandlers();
-    addAuthButtonHandlers();
-  }
+    // Add edit handlers for profile fields (only for own profile)
+    if (isOwnProfile) {
+        addProfileEditHandlers();
+        addAuthButtonHandlers();
+    }
 };
 
 /* Add click handlers for editable profile fields */
 const addProfileEditHandlers = () => {
-  document.querySelectorAll('.profile-info-item__value').forEach(field => {
-    if (field.id && field.id.includes('-value') && 
-        ['name', 'genres', 'about'].includes(field.id.replace('-value', ''))) {
-      field.addEventListener('click', function() {
-        const fieldName = this.id.replace('-value', '');
-        startProfileFieldEdit(fieldName);
-      });
-    }
-  });
+    document.querySelectorAll('.profile-info-item__value').forEach(field => {
+        if (field.id && field.id.includes('-value') &&
+            ['name', 'genres', 'about'].includes(field.id.replace('-value', ''))) {
+            field.addEventListener('click', function () {
+                const fieldName = this.id.replace('-value', '');
+                startProfileFieldEdit(fieldName);
+            });
+        }
+    });
 };
 
 /* Start editing a profile field */
 let currentEditField = null;
 
 const startProfileFieldEdit = (fieldName) => {
-  if (currentEditField) {
-    cancelProfileEdit(currentEditField);
-  }
-
-  currentEditField = fieldName;
-  const valueElement = document.getElementById(`${fieldName}-value`);
-  const formElement = document.getElementById(`${fieldName}-form`);
-
-  if (valueElement && formElement) {
-    valueElement.style.display = 'none';
-    formElement.classList.add('active');
-
-    // Focus on first input field
-    if (fieldName === 'name') {
-      const firstNameInput = formElement.querySelector('#first-name-input');
-      if (firstNameInput) {
-        firstNameInput.focus();
-        firstNameInput.select();
-      }
-    } else if (fieldName === 'about') {
-      const aboutInput = formElement.querySelector('#about-input');
-      if (aboutInput) {
-        aboutInput.focus();
-      }
+    if (currentEditField) {
+        cancelProfileEdit(currentEditField);
     }
-  }
+
+    currentEditField = fieldName;
+    const valueElement = document.getElementById(`${fieldName}-value`);
+    const formElement = document.getElementById(`${fieldName}-form`);
+
+    if (valueElement && formElement) {
+        valueElement.style.display = 'none';
+        formElement.classList.add('active');
+
+        // Focus on first input field
+        if (fieldName === 'name') {
+            const firstNameInput = formElement.querySelector('#first-name-input');
+            if (firstNameInput) {
+                firstNameInput.focus();
+                firstNameInput.select();
+            }
+        } else if (fieldName === 'about') {
+            const aboutInput = formElement.querySelector('#about-input');
+            if (aboutInput) {
+                aboutInput.focus();
+            }
+        }
+    }
 };
 
-/* Save edited profile field to localStorage */
+/* Save edited profile field to localStorage and server */
 const saveProfileField = (fieldName) => {
-  if (!currentUser) return;
+    if (!currentUser) return;
 
-  const userIndex = users.findIndex(user => user.cardNumber === currentUser.cardNumber);
-  if (userIndex === -1) return;
+    const userIndex = users.findIndex(user => user.cardNumber === currentUser.cardNumber);
+    if (userIndex === -1) return;
 
-  const formElement = document.getElementById(`${fieldName}-form`);
-  const valueElement = document.getElementById(`${fieldName}-value`);
+    const formElement = document.getElementById(`${fieldName}-form`);
+    const valueElement = document.getElementById(`${fieldName}-value`);
 
-  if (!formElement || !valueElement) return;
+    if (!formElement || !valueElement) return;
 
-  let newValue = '';
+    let newValue = '';
 
-  if (fieldName === 'name') {
-    const firstName = document.getElementById('first-name-input').value.trim();
-    const lastName = document.getElementById('last-name-input').value.trim();
+    if (fieldName === 'name') {
+        const firstName = document.getElementById('first-name-input').value.trim();
+        const lastName = document.getElementById('last-name-input').value.trim();
 
-    if (!firstName || !lastName) {
-      alert('Both first name and last name are required');
-      return;
+        if (!firstName || !lastName) {
+            alert('Both first name and last name are required');
+            return;
+        }
+
+        newValue = `${firstName} ${lastName}`;
+        users[userIndex].firstName = firstName;
+        users[userIndex].lastName = lastName;
+    } else if (fieldName === 'genres') {
+        const selectElement = document.getElementById('genres-input');
+        const selectedOptions = Array.from(selectElement.selectedOptions).map(option => option.value);
+        newValue = selectedOptions.length > 0 ? selectedOptions.join(', ') : 'Not specified';
+        users[userIndex].favoriteGenres = selectedOptions;
+    } else if (fieldName === 'about') {
+        const aboutInput = document.getElementById('about-input');
+        newValue = aboutInput.value.trim() || 'No information provided';
+        users[userIndex].aboutMe = aboutInput.value.trim();
     }
 
-    newValue = `${firstName} ${lastName}`;
-    users[userIndex].firstName = firstName;
-    users[userIndex].lastName = lastName;
-  } else if (fieldName === 'genres') {
-    const selectElement = document.getElementById('genres-input');
-    const selectedOptions = Array.from(selectElement.selectedOptions).map(option => option.value);
-    newValue = selectedOptions.length > 0 ? selectedOptions.join(', ') : 'Not specified';
-    users[userIndex].favoriteGenres = selectedOptions;
-  } else if (fieldName === 'about') {
-    const aboutInput = document.getElementById('about-input');
-    newValue = aboutInput.value.trim() || 'No information provided';
-    users[userIndex].aboutMe = aboutInput.value.trim();
-  }
+    // Save to localStorage
+    localStorage.setItem('users-annsilin', JSON.stringify(users));
 
-  // Save to localStorage
-  localStorage.setItem('users-annsilin', JSON.stringify(users));
-  
-  // Update currentUser reference
-  currentUser = users[userIndex];
+    // Update currentUser reference
+    currentUser = users[userIndex];
 
-  valueElement.textContent = newValue;
-  valueElement.style.display = 'flex';
-  formElement.classList.remove('active');
-  currentEditField = null;
+    // Save to server
+    if (typeof saveUserToServer === 'function') {
+        saveUserToServer(currentUser);
+    } else {
+        // Fallback if function not available
+        fetch('http://localhost:5007/users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                cardNumber: currentUser.cardNumber,
+                email: currentUser.email,
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                password: currentUser.password,
+                visits: currentUser.visits,
+                books: currentUser.books,
+                cardPurchased: currentUser.cardPurchased,
+                registrationDate: currentUser.registrationDate,
+                registrationTimestamp: currentUser.registrationTimestamp,
+                favoriteGenres: currentUser.favoriteGenres,
+                aboutMe: currentUser.aboutMe
+            })
+        }).catch(err => console.error('Error saving to server:', err));
+    }
 
-  showProfileNotification(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} updated successfully!`);
-  
-  // Update UI in header
-  if (typeof updateUI === 'function') {
-    updateUI();
-  }
+    valueElement.textContent = newValue;
+    valueElement.style.display = 'flex';
+    formElement.classList.remove('active');
+    currentEditField = null;
+
+    showProfileNotification(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} updated successfully!`);
+
+    // Update UI in header
+    if (typeof updateUI === 'function') {
+        updateUI();
+    }
 };
 
 /* Cancel editing a profile field */
 const cancelProfileEdit = (fieldName) => {
-  const valueElement = document.getElementById(`${fieldName}-value`);
-  const formElement = document.getElementById(`${fieldName}-form`);
+    const valueElement = document.getElementById(`${fieldName}-value`);
+    const formElement = document.getElementById(`${fieldName}-form`);
 
-  if (valueElement && formElement) {
-    valueElement.style.display = 'flex';
-    formElement.classList.remove('active');
-    currentEditField = null;
-  }
+    if (valueElement && formElement) {
+        valueElement.style.display = 'flex';
+        formElement.classList.remove('active');
+        currentEditField = null;
+    }
 };
 
 /* Handle password change */
 const changePassword = () => {
-  if (!currentUser) return;
+    if (!currentUser) return;
 
-  const oldPassword = prompt('Enter current password:');
-  if (!oldPassword) return;
+    const oldPassword = prompt('Enter current password:');
+    if (!oldPassword) return;
 
-  if (oldPassword !== currentUser.password) {
-    alert('Incorrect current password');
-    return;
-  }
+    if (oldPassword !== currentUser.password) {
+        alert('Incorrect current password');
+        return;
+    }
 
-  const newPassword = prompt('Enter new password (min 8 characters):');
-  if (!newPassword || newPassword.length < 8) {
-    alert('New password must be at least 8 characters long');
-    return;
-  }
+    const newPassword = prompt('Enter new password (min 8 characters):');
+    if (!newPassword || newPassword.length < 8) {
+        alert('New password must be at least 8 characters long');
+        return;
+    }
 
-  const confirmPassword = prompt('Confirm new password:');
-  if (newPassword !== confirmPassword) {
-    alert('Passwords do not match');
-    return;
-  }
+    const confirmPassword = prompt('Confirm new password:');
+    if (newPassword !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
 
-  const userIndex = users.findIndex(user => user.cardNumber === currentUser.cardNumber);
-  if (userIndex !== -1) {
-    users[userIndex].password = newPassword;
-    localStorage.setItem('users-annsilin', JSON.stringify(users));
-    currentUser = users[userIndex];
-    showProfileNotification('Password changed successfully!');
-  }
+    const userIndex = users.findIndex(user => user.cardNumber === currentUser.cardNumber);
+    if (userIndex !== -1) {
+        users[userIndex].password = newPassword;
+        localStorage.setItem('users-annsilin', JSON.stringify(users));
+        currentUser = users[userIndex];
+        showProfileNotification('Password changed successfully!');
+    }
 };
 
 /* Return a borrowed book */
-const returnBook = (bookId) => {
-  if (!bookId || !currentUser || !confirm('Return this book to the library?')) return;
+const returnBook = async (bookId) => {
+    if (!bookId || !currentUser || !confirm('Return this book to the library?')) return;
 
-  const userIndex = users.findIndex(user => user.cardNumber === currentUser.cardNumber);
-  if (userIndex === -1) return;
+    console.log('Returning book:', bookId);
 
-  // Remove book from user's books array
-  users[userIndex].books = users[userIndex].books.filter(id => id !== bookId);
-  localStorage.setItem('users-annsilin', JSON.stringify(users));
-  currentUser = users[userIndex];
+    const userIndex = users.findIndex(user => user.cardNumber === currentUser.cardNumber);
+    if (userIndex === -1) {
+        console.error('User not found in users array');
+        return;
+    }
 
-  // Refresh profile page
-  initProfilePage();
-  showProfileNotification('Book returned successfully!');
+    // Remove book from user's books array
+    users[userIndex].books = users[userIndex].books.filter(id => id !== bookId);
+
+    // Update currentUser reference
+    currentUser = users[userIndex];
+
+    // Save to localStorage
+    localStorage.setItem('users-annsilin', JSON.stringify(users));
+    console.log('Book removed from localStorage');
+
+    // Save to server
+    try {
+        const USER_SERVICE_URL = 'http://localhost:5007';
+        const {isLoggedIn, ...userDataForServer} = currentUser;
+
+        const response = await fetch(`${USER_SERVICE_URL}/users`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(userDataForServer)
+        });
+
+        if (response.ok) {
+            console.log('Book return saved to server');
+        } else {
+            console.error('Failed to save book return to server');
+        }
+    } catch (error) {
+        console.error('Error saving book return to server:', error);
+    }
+
+    // Refresh profile page
+    initProfilePage();
+    showProfileNotification('Book returned successfully!');
+
+    // Update readers card if on main page
+    if (typeof changeReadersCard === 'function') {
+        changeReadersCard(currentUser);
+    }
+
+    // Update profile modal if exists
+    if (typeof updateProfileModal === 'function') {
+        updateProfileModal(currentUser);
+    }
 };
+
+/* Make returnBook globally accessible */
+window.returnBook = returnBook;
 
 /* Show notification message */
 const showProfileNotification = (message) => {
-  const notification = document.createElement('div');
-  notification.style.cssText = `
+    const notification = document.createElement('div');
+    notification.style.cssText = `
     position: fixed;
     top: 20px;
     right: 20px;
@@ -487,49 +555,49 @@ const showProfileNotification = (message) => {
     animation: slideIn 0.3s ease-out;
   `;
 
-  notification.textContent = message;
-  document.body.appendChild(notification);
+    notification.textContent = message;
+    document.body.appendChild(notification);
 
-  // Remove notification after 3 seconds
-  setTimeout(() => {
-    notification.style.animation = 'slideOut 0.3s ease-out';
+    // Remove notification after 3 seconds
     setTimeout(() => {
-      if (notification.parentNode) {
-        document.body.removeChild(notification);
-      }
-    }, 300);
-  }, 3000);
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
 };
 
 /* Add handlers for auth buttons (Log In / Sign Up) */
 const addAuthButtonHandlers = () => {
-  document.querySelectorAll('.log-in').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (typeof openModal === 'function' && typeof modalSignIn !== 'undefined') {
-        openModal(modalSignIn);
-      } else {
-        window.location.href = 'index.html#library-card';
-      }
+    document.querySelectorAll('.log-in').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (typeof openModal === 'function' && typeof modalSignIn !== 'undefined') {
+                openModal(modalSignIn);
+            } else {
+                window.location.href = 'index.html#library-card';
+            }
+        });
     });
-  });
 
-  document.querySelectorAll('.sign-up').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (typeof openModal === 'function' && typeof modalSignUp !== 'undefined') {
-        openModal(modalSignUp);
-      } else {
-        window.location.href = 'index.html#library-card';
-      }
+    document.querySelectorAll('.sign-up').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (typeof openModal === 'function' && typeof modalSignUp !== 'undefined') {
+                openModal(modalSignUp);
+            } else {
+                window.location.href = 'index.html#library-card';
+            }
+        });
     });
-  });
 };
 
 /* Initialize profile page when DOM is loaded */
 document.addEventListener('DOMContentLoaded', () => {
-  // Wait a bit for other scripts to load (especially books_data.js)
-  setTimeout(() => {
-    initProfilePage();
-  }, 100);
+    // Wait a bit for other scripts to load (especially books_data.js)
+    setTimeout(() => {
+        initProfilePage();
+    }, 100);
 });

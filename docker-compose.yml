@@ -60,6 +60,22 @@ services:
     networks:
       - chat-network
 
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.user
+    ports:
+      - "5007:5007"
+    volumes:
+      - ./user_service/users.db:/app/user_service/users.db
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - chat-network
+
   frontend:
     build:
       context: .
@@ -70,6 +86,7 @@ services:
       - chat-service
       - presence-service
       - notification-service
+      - user-service
     networks:
       - chat-network
 

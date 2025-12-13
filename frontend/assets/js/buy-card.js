@@ -18,7 +18,7 @@ buyCardInputs.forEach(input => {
   })
 });
 
-buyCardForm.addEventListener("submit", (e) => {
+buyCardForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const creditCardNumber = creditCardNumberInput.value.trim();
   const expirationDateMonth = expirationDateMonthInput.value.trim();
@@ -31,7 +31,30 @@ buyCardForm.addEventListener("submit", (e) => {
   if (validateCreditCard(creditCardNumber, expirationDateMonth, expirationDateYear, cvc, cardholderName, postalCode,
     city)) {
     currentUser.cardPurchased = true;
+
+    // Update user in the users array
+    const userIndex = users.findIndex(u => u.cardNumber === currentUser.cardNumber);
+    if (userIndex !== -1) {
+      users[userIndex] = currentUser;
+    }
+
     localStorage.setItem('users-annsilin', JSON.stringify(users));
+
+    // Save to server
+    try {
+      const USER_SERVICE_URL = 'http://localhost:5007';
+      const { isLoggedIn, ...userDataForServer } = currentUser;
+
+      await fetch(`${USER_SERVICE_URL}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userDataForServer)
+      });
+      console.log('Card purchase saved to server');
+    } catch (error) {
+      console.error('Error saving card purchase to server:', error);
+    }
+
     closeModal([modalBuyCard]);
   }
 });
@@ -131,7 +154,8 @@ const allFieldsFilled = (inputs) => {
   return inputs.every(input => input.value.length !== 0);
 }
 
-const clearBuyCardForm = () => {
+/* Make clearBuyCardForm globally accessible */
+window.clearBuyCardForm = function() {
   buyCardInputs.forEach(input => {
     input.value = "";
   })

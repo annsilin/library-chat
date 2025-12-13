@@ -1,6 +1,6 @@
 /* Create HTML markup for each book in given data array */
 const createBook = (book) => {
-  let buttonBuy = `<button class="button-buy button" id="buy-${book.id}" onclick="buyBtnHandler()">Buy</button>`;
+  let buttonBuy = `<button class="button-buy button" id="buy-${book.id}" onclick="buyBtnHandler(event)">Buy</button>`;
   if (currentUser && currentUser.books.includes(book.id)) {
     buttonBuy = `<button class="button-own" disabled>Own</button>`
   }
@@ -54,9 +54,15 @@ radioButtons.forEach((radioButton, index) => {
 });
 
 /* Handle Buy button click on different use cases */
-const buyBtnHandler = () => {
+const buyBtnHandler = async (event) => {
+  if (!event) {
+    console.error('Event is undefined');
+    return;
+  }
+
   event.stopPropagation();
   closeModal(modals);
+
   // If there's no logged in user -> open Sign In modal
   if (!currentUser) {
     openModal(modalSignIn);
@@ -69,13 +75,50 @@ const buyBtnHandler = () => {
   else if (currentUser && currentUser.cardPurchased) {
     // Get an ID of desired book
     let purchasedBook = event.target.id.split('-')[1];
+    let bookId = Number(purchasedBook);
+
+    console.log('Buying book:', bookId);
+
     // Push this book to user's purchased books array
-    currentUser.books.push(Number(purchasedBook));
+    currentUser.books.push(bookId);
+
+    // Update user in the users array
+    const userIndex = users.findIndex(u => u.cardNumber === currentUser.cardNumber);
+    if (userIndex !== -1) {
+      users[userIndex] = currentUser;
+    }
+
     localStorage.setItem('users-annsilin', JSON.stringify(users));
+    console.log('Book added to localStorage');
+
+    // Save to server
+    try {
+      const USER_SERVICE_URL = 'http://localhost:5007';
+      const { isLoggedIn, ...userDataForServer } = currentUser;
+
+      const response = await fetch(`${USER_SERVICE_URL}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userDataForServer)
+      });
+
+      if (response.ok) {
+        console.log('Book purchase saved to server');
+      } else {
+        console.error('Failed to save book purchase to server');
+      }
+    } catch (error) {
+      console.error('Error saving book purchase to server:', error);
+    }
+
     // Replace Buy button with Own button
     event.target.outerHTML = `<button class="button-own" disabled>Own</button>`;
+
     // Update info in profile modal and reader's card
     changeReadersCard(currentUser);
     updateProfileModal(currentUser);
   }
 }
+
+/* Make buyBtnHandler globally accessible */
+window.buyBtnHandler = buyBtnHandler;

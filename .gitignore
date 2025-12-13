@@ -393,3 +393,4 @@ chat_service/chat.db
 delivery_service/delivery.db
 notification_service/notification.db
 presence_service/presence.db
+user_service/users.db

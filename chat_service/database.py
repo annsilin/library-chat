@@ -9,7 +9,7 @@ def init_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS rooms 
                       (id TEXT PRIMARY KEY, name TEXT, created_at TEXT)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS messages 
-                      (id TEXT PRIMARY KEY, room_id TEXT, user_id TEXT, content TEXT, created_at TEXT)''')
+                      (id TEXT PRIMARY KEY, room_id TEXT, user_id TEXT, content TEXT, created_at TEXT, user_name TEXT)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS room_members 
                       (room_id TEXT, user_id TEXT, PRIMARY KEY (room_id, user_id))''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS outbox
@@ -33,21 +33,21 @@ def insert_room(room_id, name, created_at):
     conn.commit()
     conn.close()
 
-def insert_message(message_id, room_id, user_id, content, created_at):
+def insert_message(message_id, room_id, user_id, content, created_at, user_name=''):
     conn = sqlite3.connect('chat.db')
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO messages (id, room_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)",
-                   (message_id, room_id, user_id, content, created_at))
+    cursor.execute("INSERT INTO messages (id, room_id, user_id, content, created_at, user_name) VALUES (?, ?, ?, ?, ?, ?)",
+                   (message_id, room_id, user_id, content, created_at, user_name))
     conn.commit()
     conn.close()
 
 def get_messages(room_id):
     conn = sqlite3.connect('chat.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, user_id, content, created_at FROM messages WHERE room_id = ? ORDER BY created_at", (room_id,))
+    cursor.execute("SELECT id, user_id, content, created_at, user_name FROM messages WHERE room_id = ? ORDER BY created_at", (room_id,))
     rows = cursor.fetchall()
     conn.close()
-    return [{'id': row[0], 'user_id': row[1], 'content': row[2], 'created_at': row[3]} for row in rows]
+    return [{'id': row[0], 'user_id': row[1], 'content': row[2], 'created_at': row[3], 'user_name': row[4] or ''} for row in rows]
 
 def insert_room_member(room_id, user_id):
     conn = sqlite3.connect('chat.db')

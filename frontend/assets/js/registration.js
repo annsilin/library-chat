@@ -35,61 +35,68 @@ const saveUserToServer = async (user) => {
     }
 };
 
-registrationForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const firstName = firstNameInput.value.trim();
-    const lastName = lastNameInput.value.trim();
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passwordInput.value.trim();
-    if (validateRegistration(firstName, lastName, email, password, users)) {
-        const currentDate = new Date();
-        const newUser = {
-            email: email,
-            password: password,
-            firstName: firstName,
-            lastName: lastName,
-            isLoggedIn: true,
-            visits: 1,
-            books: [],
-            cardNumber: assignCardNumber(users),
-            cardPurchased: false,
-            registrationTimestamp: currentDate.getTime(),
-            registrationDate: currentDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }),
-            favoriteGenres: [],
-            aboutMe: ''
+// Check if form exists before adding listener
+if (registrationForm) {
+    registrationForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passwordInput.value.trim();
+        if (validateRegistration(firstName, lastName, email, password, users)) {
+            const currentDate = new Date();
+            const newUser = {
+                email: email,
+                password: password,
+                firstName: firstName,
+                lastName: lastName,
+                isLoggedIn: true,
+                visits: 1,
+                books: [],
+                cardNumber: assignCardNumber(users),
+                cardPurchased: false,
+                registrationTimestamp: currentDate.getTime(),
+                registrationDate: currentDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }),
+                favoriteGenres: [],
+                aboutMe: ''
+            }
+            logoutAllUsers(users);
+            addUserToLocalStorage(newUser);
+            // Save to server
+            saveUserToServer(newUser);
+            closeModal([modalSignUp]);
+            location.reload();
         }
-        logoutAllUsers(users);
-        addUserToLocalStorage(newUser);
-        // Save to server
-        saveUserToServer(newUser);
-        closeModal([modalSignUp]);
-        location.reload();
-    }
-});
+    });
 
-loginForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const username = loginUsernameInput.value.trim();
-    const password = loginPasswordInput.value.trim();
-    if (validateLogin(username, password, users)) {
-        const foundUser = users.find(user =>
-            (user.email && user.email.toLowerCase() === username.toLowerCase() ||
-                user.cardNumber && user.cardNumber.toLowerCase() === username.toLowerCase()) &&
-            user.password && user.password === password);
-        logoutAllUsers(users);
-        foundUser.isLoggedIn = true;
-        foundUser.visits += 1;
-        localStorage.setItem('users-annsilin', JSON.stringify(users));
-        // Update on server
-        saveUserToServer(foundUser);
-        closeModal([modalSignIn]);
-        location.reload();
-    }
-});
+}
+
+// Check if form exists before adding listener
+if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = loginUsernameInput.value.trim();
+        const password = loginPasswordInput.value.trim();
+        if (validateLogin(username, password, users)) {
+            const foundUser = users.find(user =>
+                (user.email && user.email.toLowerCase() === username.toLowerCase() ||
+                    user.cardNumber && user.cardNumber.toLowerCase() === username.toLowerCase()) &&
+                user.password && user.password === password);
+            logoutAllUsers(users);
+            foundUser.isLoggedIn = true;
+            foundUser.visits += 1;
+            localStorage.setItem('users-annsilin', JSON.stringify(users));
+            // Update on server
+            saveUserToServer(foundUser);
+            closeModal([modalSignIn]);
+            location.reload();
+        }
+    });
+}
 
 logoutBtns.forEach(logoutBtn =>
     logoutBtn.addEventListener("click", (e) => {
@@ -107,13 +114,17 @@ logoutBtns.forEach(logoutBtn =>
     })
 );
 
-btnEyeSignUp.addEventListener("click", () => {
-    passwordVisibility(passwordInput);
-});
+if (btnEyeSignUp) {
+    btnEyeSignUp.addEventListener("click", () => {
+        passwordVisibility(passwordInput);
+    });
+}
 
-btnEyeSignIn.addEventListener("click", () => {
-    passwordVisibility(loginPasswordInput);
-});
+if (btnEyeSignIn) {
+    btnEyeSignIn.addEventListener("click", () => {
+        passwordVisibility(loginPasswordInput);
+    });
+}
 
 /* Validate user inputs upon entering login credentials */
 const validateLogin = (username, password, users) => {
@@ -210,6 +221,10 @@ const validInput = (field) => {
     error.innerText = "";
     inputField.classList.remove("error");
 }
+
+/* Make validation functions globally accessible */
+window.showError = showError;
+window.validInput = validInput;
 
 /* Check that email is entered correctly */
 const isValidEmail = (email) => {

@@ -1,8 +1,8 @@
 let userId = null;
 let roomId = null;
 let roomName = null;
-let lastNotificationId = 0; // Track the last processed notification
-let isOnline = false; // Track current presence status
+let lastNotificationId = 0;
+let isOnline = false;
 
 /* Generate a random UUID for anonymous users */
 const generateUUID = () => {
@@ -16,14 +16,12 @@ const generateUUID = () => {
 /* Initialize user ID based on authentication status */
 const initializeUserId = () => {
     if (currentUser && currentUser.cardNumber) {
-        // If user is logged in, use card number as user ID
         userId = currentUser.cardNumber;
         localStorage.setItem('userId', userId);
         localStorage.setItem('userIsAuthenticated', 'true');
         localStorage.setItem('userFirstName', currentUser.firstName);
         localStorage.setItem('userLastName', currentUser.lastName);
     } else {
-        // If user is anonymous, generate or retrieve anonymous ID
         const storedUserId = localStorage.getItem('userId');
         if (storedUserId && localStorage.getItem('userIsAuthenticated') === 'false') {
             userId = storedUserId;
@@ -38,15 +36,12 @@ const initializeUserId = () => {
 /* Get user display name for chat */
 const getUserDisplayName = () => {
     if (currentUser && currentUser.cardNumber === userId) {
-        // Authenticated user - show first and last name
         return `${currentUser.firstName} ${currentUser.lastName}`;
     } else if (localStorage.getItem('userIsAuthenticated') === 'true') {
-        // Previously authenticated but not currently logged in
         const firstName = localStorage.getItem('userFirstName') || 'User';
         const lastName = localStorage.getItem('userLastName') || 'Anonymous';
         return `${firstName} ${lastName}`;
     } else {
-        // Anonymous user
         return `User_${userId.slice(0, 4)}`;
     }
 };
@@ -68,22 +63,19 @@ const getUserProfileUrl = (userCardNumber) => {
 const updateUserIdOnAuthChange = () => {
     const previousUserId = userId;
     initializeUserId();
-    
-    // If user ID changed and we're in a room, update presence
+
     if (previousUserId !== userId && roomId) {
-        // Remove previous user from presence
         if (previousUserId) {
             fetch(`http://localhost:5004/presence/${previousUserId}`, {
                 method: 'DELETE'
             }).catch(err => console.error('Error removing previous user presence:', err));
         }
-        
-        // Add new user to presence if authenticated
+
         if (isUserAuthenticated() && isOnline) {
             fetch(`http://localhost:5004/presence/${userId}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ status: 'online' })
+                body: JSON.stringify({status: 'online'})
             }).catch(err => console.error('Error adding new user presence:', err));
         }
     }
@@ -98,7 +90,7 @@ const checkPresence = async () => {
             isOnline = presence.status === 'online';
             updateStatusButton();
         } else {
-            isOnline = false; // Assume offline if not found
+            isOnline = false;
             updateStatusButton();
         }
     } catch (error) {
@@ -113,14 +105,12 @@ const updateStatusButton = () => {
     const button = document.getElementById('statusToggle');
     if (button) {
         button.innerText = isOnline ? 'Go Offline' : 'Go Online';
-        // Disable status toggle for anonymous users
         button.disabled = !isUserAuthenticated();
     }
 };
 
 /* Toggle user online/offline status */
 const toggleStatus = async () => {
-    // Anonymous users cannot toggle status
     if (!isUserAuthenticated()) {
         alert('Please sign in to set your online status.');
         return;
@@ -140,7 +130,7 @@ const toggleStatus = async () => {
             const response = await fetch(`http://localhost:5004/presence/${userId}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ status: 'online' })
+                body: JSON.stringify({status: 'online'})
             });
             if (!response.ok) {
                 throw new Error(`Failed to set online: ${response.status} ${response.statusText}`);
@@ -185,21 +175,18 @@ const joinRoom = async () => {
         console.log('Set roomName to:', roomName);
 
         document.getElementById('chatSection').classList.remove('hidden');
-
-        // Обновляем заголовок комнаты в UI
         updateRoomTitle();
-        
-        // Set user to online if authenticated
+
         if (isUserAuthenticated()) {
             await fetch(`http://localhost:5004/presence/${userId}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ status: 'online' })
+                body: JSON.stringify({status: 'online'})
             });
             isOnline = true;
             updateStatusButton();
         }
-        
+
         pollMessages();
     } catch (error) {
         console.error('Error joining room:', error);
@@ -218,24 +205,29 @@ const updateRoomTitle = () => {
 const sendMessage = async () => {
     const content = document.getElementById('message').value;
     console.log('Attempting to send message with roomId:', roomId, 'content:', content);
-    
+
     if (!roomId || !content) {
         console.error('Cannot send message: Missing roomId or content', {roomId, content});
         return;
     }
 
     try {
+        const userName = getUserDisplayName();
         console.log('Sending message to:', `http://localhost:5003/rooms/${roomId}/messages`);
         const response = await fetch(`http://localhost:5003/rooms/${roomId}/messages`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({user_id: userId, content})
+            body: JSON.stringify({
+                user_id: userId,
+                content: content,
+                user_name: userName
+            })
         });
-        
+
         if (!response.ok) {
             throw new Error(`Failed to send message: ${response.status} ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         console.log('Message sent successfully:', result);
         document.getElementById('message').value = '';
@@ -249,37 +241,35 @@ const displayMessage = (msg) => {
     const chat = document.getElementById('chat');
     if (!chat) return;
 
-    // Try to parse user data from the message
     let userDisplayName = `User_${msg.user_id.slice(0, 4)}`;
     let userProfileUrl = null;
     let isClickable = false;
 
-    // Check if this is the current user's message
     const isCurrentUser = msg.user_id === userId;
-
-    // Check if user ID looks like a card number (9 hex digits)
     const isCardNumber = /^[0-9A-F]{9}$/i.test(msg.user_id);
 
-    if (isCardNumber) {
-        // This user might be authenticated
+    // Check if message has user_name stored
+    if (msg.user_name && msg.user_name.trim() !== '') {
+        userDisplayName = msg.user_name;
+        if (isCardNumber) {
+            userProfileUrl = getUserProfileUrl(msg.user_id);
+            isClickable = true;
+        }
+    } else if (isCardNumber) {
         userDisplayName = `User_${msg.user_id.slice(0, 4)}`;
         userProfileUrl = getUserProfileUrl(msg.user_id);
         isClickable = true;
 
-        // If this is the current user and we're authenticated, show real name
         if (isCurrentUser && isUserAuthenticated()) {
             userDisplayName = getUserDisplayName();
         }
     } else if (isCurrentUser) {
-        // Current user (authenticated or anonymous)
         userDisplayName = getUserDisplayName();
     }
 
-    // Format timestamp with user's timezone
     let timestampDisplay = '';
     if (msg.created_at) {
         const timestamp = new Date(msg.created_at);
-        // Use user's local timezone
         timestampDisplay = timestamp.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
@@ -287,17 +277,14 @@ const displayMessage = (msg) => {
         });
     }
 
-    // Create message element with original simple structure
     const messageElement = document.createElement('div');
     messageElement.className = 'chat-message';
     messageElement.setAttribute('data-message-id', msg.id);
 
-    // Create username element (simple span, not clickable link)
     const usernameElement = document.createElement('span');
     usernameElement.className = 'chat-username';
 
     if (isClickable && userProfileUrl) {
-        // Make username clickable with profile link (simple link, not complex structure)
         const usernameLink = document.createElement('a');
         usernameLink.href = userProfileUrl;
         usernameLink.target = '_blank';
@@ -305,16 +292,13 @@ const displayMessage = (msg) => {
         usernameLink.textContent = userDisplayName;
         usernameElement.appendChild(usernameLink);
     } else {
-        // Non-clickable username (simple text)
         usernameElement.textContent = userDisplayName;
     }
 
-    // Create content element with message text
     const contentElement = document.createElement('span');
     contentElement.className = 'chat-content';
     contentElement.textContent = `: ${msg.content}`;
 
-    // Add timestamp if available
     if (timestampDisplay) {
         const timestampElement = document.createElement('span');
         timestampElement.className = 'chat-timestamp';
@@ -322,11 +306,9 @@ const displayMessage = (msg) => {
         contentElement.appendChild(timestampElement);
     }
 
-    // Assemble message (simple structure like before)
     messageElement.appendChild(usernameElement);
     messageElement.appendChild(contentElement);
 
-    // Add to chat
     chat.appendChild(messageElement);
 };
 
@@ -354,15 +336,11 @@ const pollMessages = async () => {
         const messages = await messagesResponse.json();
         const notifications = await notificationsResponse.json();
 
-        // Get chat container
         const chat = document.getElementById('chat');
-
-        // Track scroll state BEFORE making any changes
         const wasScrolledToBottom = chat.scrollHeight - chat.clientHeight <= chat.scrollTop + 50;
         const previousScrollTop = chat.scrollTop;
         const previousScrollHeight = chat.scrollHeight;
 
-        // Get existing message IDs
         const existingMessageIds = new Set();
         const existingMessageElements = chat.querySelectorAll('.chat-message');
         existingMessageElements.forEach(msg => {
@@ -370,7 +348,6 @@ const pollMessages = async () => {
             if (msgId) existingMessageIds.add(msgId);
         });
 
-        // Display new messages (only those we haven't displayed yet)
         let newMessagesAdded = false;
         messages.forEach(msg => {
             if (!existingMessageIds.has(msg.id.toString())) {
@@ -380,37 +357,30 @@ const pollMessages = async () => {
             }
         });
 
-        // Handle notifications
         const newNotifications = notifications.filter(notif => notif.id > lastNotificationId);
         if (newNotifications.length > 0) {
             lastNotificationId = Math.max(...newNotifications.map(notif => notif.id));
 
-            // Request permission for browser notifications if not already granted
             if (Notification.permission !== 'granted') {
                 await Notification.requestPermission();
             }
 
-            // Play sound and show browser notification
             const audio = new Audio('/assets/sounds/notification.mp3');
             audio.play().catch(err => console.error('Error playing sound:', err));
 
             newNotifications.forEach(notif => {
-                // Use notification message AS IS (server already includes room name)
                 const notificationMessage = notif.message;
 
-                // Show browser notification if permission is granted
                 if (Notification.permission === 'granted') {
                     new Notification('Library Chat', {
                         body: notificationMessage,
                     });
                 }
 
-                // Display notification in chat
                 const notificationElement = document.createElement('div');
                 notificationElement.className = 'chat-notification';
                 notificationElement.setAttribute('data-notification-id', notif.id);
 
-                // Format notification timestamp with user's timezone
                 let notifTimestamp = '';
                 if (notif.created_at) {
                     const timestamp = new Date(notif.created_at);
@@ -429,14 +399,11 @@ const pollMessages = async () => {
             newMessagesAdded = true;
         }
 
-        // Smart scroll position restoration
         if (newMessagesAdded) {
             requestAnimationFrame(() => {
                 if (wasScrolledToBottom) {
-                    // User was at bottom - keep them at bottom
                     chat.scrollTop = chat.scrollHeight;
                 } else {
-                    // User was scrolling up - maintain relative position
                     const newScrollHeight = chat.scrollHeight;
                     const heightDifference = newScrollHeight - previousScrollHeight;
                     chat.scrollTop = previousScrollTop + heightDifference;
@@ -448,7 +415,6 @@ const pollMessages = async () => {
         console.error('Error polling messages or notifications:', error);
     }
 
-    // Poll every 1.5 seconds
     setTimeout(pollMessages, 1500);
 };
 
@@ -465,27 +431,25 @@ const markNotificationDelivered = async (notificationId) => {
 
 /* Initialize chat when DOM is loaded */
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize user ID based on authentication status
     initializeUserId();
-    
-    // Set up event listeners for buttons
+
     const statusToggleBtn = document.getElementById('statusToggle');
     const joinRoomBtn = document.getElementById('joinRoom');
     const sendMessageBtn = document.getElementById('sendMessage');
     const messageInput = document.getElementById('message');
-    
+
     if (statusToggleBtn) {
         statusToggleBtn.addEventListener('click', toggleStatus);
     }
-    
+
     if (joinRoomBtn) {
         joinRoomBtn.addEventListener('click', joinRoom);
     }
-    
+
     if (sendMessageBtn) {
         sendMessageBtn.addEventListener('click', sendMessage);
     }
-    
+
     if (messageInput) {
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -493,21 +457,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
-    // Check presence on page load
+
     checkPresence();
-    
-    // Update chat UI based on authentication status
     updateStatusButton();
 });
 
-/* Update user ID when authentication status changes (e.g., login/logout) */
-// Сalling from authentication logic
+/* Update user ID when authentication status changes */
 const updateChatAuthStatus = () => {
     updateUserIdOnAuthChange();
     updateStatusButton();
-    
-    // Refresh chat if we're in a room
+
     if (roomId) {
         pollMessages();
     }

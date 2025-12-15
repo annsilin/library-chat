@@ -160,6 +160,64 @@
 
 <div class="overlay hidden"></div>
 
+<div class="modal-profile hidden">
+    <div class="modal-profile__user">
+        <div class="modal-profile__user-pic"></div>
+        <div class="modal-profile__user-name">
+            <span class="modal-profile__user-name-first"></span>
+            <span class="modal-profile__user-name-last"></span>
+        </div>
+    </div>
+    <div class="modal-profile__info">
+        <h2 class="modal-profile-title">My profile</h2>
+        <div class="modal-profile__info-cards">
+            <div class="modal-profile__info-card">
+                <span class="modal-profile__info-card-title">Visits</span>
+                <svg class="" width="20px" height="21px">
+                    <use href="assets/svg/icons.svg#icon-visits"></use>
+                </svg>
+                <span class="modal-profile__info-card-counter modal-profile__info-card-visits">0</span>
+            </div>
+            <div class="modal-profile__info-card">
+                <span class="modal-profile__info-card-title">Bonuses</span>
+                <svg class="" width="20px" height="21px">
+                    <use href="assets/svg/icons.svg#icon-bonuses"></use>
+                </svg>
+                <span class="modal-profile__info-card-counter modal-profile__info-card-bonuses">1240</span>
+            </div>
+            <div class="modal-profile__info-card">
+                <span class="modal-profile__info-card-title">Books</span>
+                <svg class="" width="20px" height="21px">
+                    <use href="assets/svg/icons.svg#icon-books"></use>
+                </svg>
+                <span class="modal-profile__info-card-counter modal-profile__info-card-books">0</span>
+            </div>
+        </div>
+        <span class="modal-profile__info-books-title">Rented books</span>
+        <div class="modal-profile__info-books">
+            <ul class="modal-profile__info-books-list">
+            </ul>
+        </div>
+        <div class="modal-profile__info-library-card">
+            <span class="modal-profile__info-library-card-title">Card number</span>
+            <span class="modal-profile__info-library-card-number"></span>
+            <button class="btn-copy" onclick="copyToClipboard()">
+                <svg class="icon-copy" width="13.31px" height="12px">
+                    <use href="assets/svg/icons.svg#icon-copy"></use>
+                </svg>
+            </button>
+        </div>
+        <button class="button" style="margin-bottom: 20px;"><a href="profile.html"
+                                                               style="text-decoration: none; color: inherit;">Full
+            profile</a></button>
+    </div>
+    <button class="btn-close">
+        <svg class="icon-close" width="19px" height="19px">
+            <use href="assets/svg/icons.svg#icon-close"></use>
+        </svg>
+    </button>
+</div>
+
 <div class="modal-register-login modal-register hidden">
     <h2 class="modal-register-login__title">Register</h2>
     <button class="btn-close">
@@ -250,25 +308,16 @@
 </div>
 
 
-    <!--    <script defer src="assets/js/current_user.js"></script>-->
-    <!--    <script defer src="assets/js/profile-dropdown.js"></script>-->
-    <!--    <script defer src="assets/js/burger.js"></script>-->
-    <!--    <script defer src="assets/js/chat.js"></script>-->
-    <!--&lt;!&ndash;    <script defer src="assets/js/update_UI_on_login.js"></script>&ndash;&gt;-->
-    <!--    <script defer src="assets/js/modal.js"></script>-->
-    <!--    <script defer src="assets/js/profile-modal.js"></script>-->
-    <!--    <script defer src="assets/js/registration.js"></script>-->
-
-
-    <script defer src="assets/js/current_user.js"></script>
-    <script defer src="assets/js/user_sync.js"></script>
-    <script defer src="assets/js/registration.js"></script>
-    <script defer src="assets/js/update_UI_on_login.js"></script>
-    <script defer src="assets/js/profile-dropdown.js"></script>
-    <script defer src="assets/js/burger.js"></script>
-    <script defer src="assets/js/modal.js"></script>
-    <script defer src="assets/js/profile-modal.js"></script>
-    <script defer src="assets/js/chat.js"></script>
+<script defer src="assets/js/current_user.js"></script>
+<script defer src="assets/js/user_sync.js"></script>
+<script defer src="assets/js/registration.js"></script>
+<script defer src="assets/js/update_UI_on_login.js"></script>
+<script defer src="assets/js/profile-dropdown.js"></script>
+<script defer src="assets/js/burger.js"></script>
+<script defer src="assets/js/books_data.js"></script>
+<script defer src="assets/js/modal.js"></script>
+<script defer src="assets/js/profile-modal.js"></script>
+<script defer src="assets/js/chat.js"></script>
 
 
 </body>
